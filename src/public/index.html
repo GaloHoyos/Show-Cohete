@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rocket Show Settings</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+      }
+      label {
+        display: block;
+        margin-top: 1rem;
+      }
+      input {
+        width: 6rem;
+        margin-left: 0.5rem;
+      }
+      button {
+        margin-top: 1.5rem;
+        padding: 0.5rem 1rem;
+      }
+      .status {
+        margin-top: 1rem;
+        color: green;
+      }
+      #start-now-button,
+      #stop-now-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        margin-right: 1rem;
+      }
+      #start-now-button:hover,
+      #stop-now-button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Configuración del Rocket Show</h1>
+    <form id="settings-form" method="POST" action="/api/settings">
+      <label>
+        ⏱️ Tiempo del show (segundos):
+        <input type="number" name="showDuration" min="1" required />
+      </label>
+      <label>
+        🔁 Tiempo de espera entre shows (minutos):
+        <input type="number" name="cronInterval" min="1" required />
+      </label>
+      <label>
+        🕒 Hora de comienzo del show (formato HH:MM):
+        <input type="time" name="startHour" required />
+      </label>
+      <button type="submit">Guardar configuración</button>
+      <button id="start-now-button" type="button">Iniciar show ahora</button>
+      <button id="stop-now-button" type="button">Terminar show</button>
+      <p class="status" id="start-now-status"></p>
+    </form>
+
+    <script>
+      // Fetch current settings and populate form
+      fetch('/api/settings')
+        .then((res) => res.json())
+        .then((cfg) => {
+          document.querySelector('input[name="showDuration"]').value =
+            cfg.showDuration;
+          document.querySelector('input[name="cronInterval"]').value =
+            cfg.cronInterval;
+          if (cfg.startHour) {
+            document.querySelector('input[name="startHour"]').value =
+              cfg.startHour;
+          }
+        })
+        .catch((err) => console.error('Error loading settings', err));
+
+      document
+        .getElementById('start-now-button')
+        .addEventListener('click', () => {
+          fetch('/api/start-now', { method: 'POST' })
+            .then((res) => {
+              if (!res.ok) throw new Error('Error al iniciar el show');
+              document.getElementById('start-now-status').textContent =
+                '🚀 Show iniciado manualmente';
+            })
+            .catch(() => {
+              document.getElementById('start-now-status').textContent =
+                '❌ Error al iniciar el show';
+            });
+        });
+
+      document
+        .getElementById('stop-now-button')
+        .addEventListener('click', () => {
+          fetch('/api/stop-now', { method: 'POST' })
+            .then((res) => {
+              if (!res.ok) throw new Error('Error al detener el show');
+              document.getElementById('start-now-status').textContent =
+                '🛑 Show terminado';
+            })
+            .catch(() => {
+              document.getElementById('start-now-status').textContent =
+                '❌ Error al terminar el show';
+            });
+        });
+    </script>
+  </body>
+</html>
